@@ -1,13 +1,9 @@
 <!DOCTYPE html>
 <html lang="fi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0,
-                 maximum-scale=1.0, user-scalable=no">
-  <title>Skabalation</title>
-
-  <!-- *** Lisätty tyylit scrollin estoon ja layoutiin *** -->
+  <!-- ensin ulkoinen -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- vasta tämän jälkeen oma upotettu tyylisi -->
   <style>
     html, body {
       height: 100%;
@@ -18,17 +14,16 @@
     #app, canvas {
       display: block;
       width: 100%;
-      height: calc(100% - 140px);
+      height: calc(100% - 140px) !important;
     }
     .control {
       position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
+      bottom: 20px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
       z-index: 10;
     }
   </style>
-  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div id="app">
