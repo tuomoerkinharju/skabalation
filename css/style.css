@@ -49,3 +49,8 @@ body {
     background-color: #706fd3;
     border: 1rem solid #474787;
 }
+html, body {
+  touch-action: manipulation;
+  -ms-touch-action: manipulation;
+  overscroll-behavior: none;
+}
