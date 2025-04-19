@@ -20,3 +20,7 @@ game.render();
 document.addEventListener('dblclick', function (e) {
   e.preventDefault();
 }, { passive: false });
+document.getElementById("start-button").addEventListener("click", () => {
+  game.start();
+  document.getElementById("start-button").classList.add("hidden");
+});

@@ -140,5 +140,6 @@ class Lumberjack {
         this.btnLeft.addEventListener('click', () => this.move('left'));
         this.btnRight.addEventListener('click', () => this.move('right'));
         this.canvas.addEventListener('click', this.startOnClick);
+        this.canvas.addEventListener('touchstart', this.startOnClick);
     }
 }
