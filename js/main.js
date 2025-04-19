@@ -14,13 +14,14 @@ const game = new Lumberjack({
     btnLeft, btnRight
 });
 
-// Aloita renderöinti heti, jotta näkymä piirtyy (mm. Aloita-painike ja tausta)
-game.render();
-
+// Estetään tuplanapista zoom
 document.addEventListener('dblclick', function (e) {
   e.preventDefault();
 }, { passive: false });
-document.getElementById("start-button").addEventListener("click", () => {
-  game.start();
-  document.getElementById("start-button").classList.add("hidden");
+
+// Aloitusnapin logiikka
+const startButton = document.getElementById("start-button");
+startButton.addEventListener("click", () => {
+    game.start(); // käynnistää pelin
+    startButton.classList.add("hidden"); // piilottaa napin
 });

@@ -95,6 +95,7 @@ class Lumberjack {
         this.isGameOver = false;
         this.init();
         this.autoDrop();
+        this.render();
     }
 
     startOnClick(e) {
