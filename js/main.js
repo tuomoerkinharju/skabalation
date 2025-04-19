@@ -1,8 +1,8 @@
 // js/main.js
 
-const canvas   = document.getElementById('canvas');
-const btnLeft  = document.getElementById('move-left');
-const btnRight = document.getElementById('move-right');
+const canvas      = document.getElementById('canvas');
+const btnLeft     = document.getElementById('move-left');
+const btnRight    = document.getElementById('move-right');
 const startButton = document.getElementById('start-button');
 
 // Luo peli‑olio
@@ -11,7 +11,8 @@ const game = new Lumberjack({
   el: canvas,
   maxWidth: 600,
   maxHeight: safeHeight - 150,
-  btnLeft, btnRight
+  btnLeft,
+  btnRight
 });
 
 // Piirrä alku‑tausta (pelilaudan alaosa) heti kerran
@@ -20,22 +21,18 @@ game.drawBackground();
 // Estä tuplanäppäin‑zoom
 document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
 
-// Start‑napin kuuntelijat (täsmällisesti Telegram WebViewissä)
-function onStart(e) {
-  e.preventDefault();
-  startButton.classList.add('hidden');
-  game.start();
-}
-['click','touchend','pointerup'].forEach(evt =>
-  startButton.addEventListener(evt, onStart)
-);
-
+// Yhtenäinen Aloita‑peli‑napin käsittelijä
 function startGame(e) {
   e.preventDefault();
   startButton.classList.add('hidden');
   game.start();
-  window.scrollTo(0, 0);    // varmistaa, että canvasin yläosa tulee näkyviin
+  window.scrollTo(0, 0);  // varmistaa, että pelialue näkyy heti
 }
-['click','touchend','pointerup'].forEach(evt =>
+
+// Kiinnitä käsittelijä click, touchstart ja pointerdown -tapahtumiin
+['click', 'touchstart', 'pointerdown'].forEach(evt =>
   startButton.addEventListener(evt, startGame)
 );
+
+// Aloita render-loop (piirtää taustan ja napin) ennen pelin käynnistystä
+game.render();
