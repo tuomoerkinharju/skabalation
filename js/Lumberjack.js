@@ -6,15 +6,15 @@ class Lumberjack {
     this.ctx       = this.canvas.getContext('2d');
     this.background = '#d3f7ff';
 
-    this.tree  = null;
-    this.person = null;
-    this.score  = 0;
+    this.tree      = null;
+    this.person    = null;
+    this.score     = 0;
     this.highScore = parseInt(localStorage.getItem('highScore')) || 0;
-    this.btnLeft  = props.btnLeft;
-    this.btnRight = props.btnRight;
+    this.btnLeft   = props.btnLeft;
+    this.btnRight  = props.btnRight;
 
-    this.isStarted    = false;
-    this.isGameOver   = false;
+    this.isStarted       = false;
+    this.isGameOver      = false;
     this.autoDropInterval = null;
 
     this.listener();
@@ -99,12 +99,11 @@ class Lumberjack {
     if (!this.isStarted || this.isGameOver) return;
 
     this.person.characterPosition = direction;
-    // ääni
     const audio = new Audio("audio/cut.wav");
     audio.playbackRate = 2;
     audio.play();
 
-    // tarkista osuma
+    // Jos osu oikealle oksalle
     if (
       (this.tree.trees[0].value === 'left'  && direction === 'left') ||
       (this.tree.trees[0].value === 'right' && direction === 'right')
@@ -121,7 +120,7 @@ class Lumberjack {
   }
 
   listener() {
-    // näppäimistö
+    // näppäimet
     window.addEventListener('keypress', e => {
       if (e.key === 'a' || e.key === 'ArrowLeft')  this.move('left');
       if (e.key === 'd' || e.key === 'ArrowRight') this.move('right');

@@ -2,6 +2,7 @@ const canvas   = document.getElementById('canvas');
 const btnLeft  = document.getElementById('move-left');
 const btnRight = document.getElementById('move-right');
 
+// Varmista näkyvät mittasuhteet
 let safeHeight = window.innerHeight;
 if (safeHeight < 500) safeHeight = 600;
 
@@ -16,14 +17,18 @@ const game = new Lumberjack({
 // Estetään tuplanapista zoom
 document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
 
-// Aloitusnapin logiikka
+// Aloita‑peli‑napin logiikka
 const startButton = document.getElementById('start-button');
 function startGame() {
-  game.start();                    // käynnistää pelin
-  startButton.classList.add('hidden'); // piilottaa napin
+  game.start();
+  startButton.classList.add('hidden');
 }
-startButton.addEventListener('click', startGame);
-startButton.addEventListener('touchstart', startGame);
+['click','touchstart','pointerdown'].forEach(evt =>
+  startButton.addEventListener(evt, e => {
+    e.preventDefault();
+    startGame();
+  })
+);
 
-// Piirretään aloitusruutu (tausta + napit) heti
+// Piirretään tausta + nappi ruudulle heti
 game.render();
