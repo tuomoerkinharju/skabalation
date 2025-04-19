@@ -18,7 +18,7 @@ class Person {
     }
     draw() {
         let character = new Image();
-        character.src = "images/character.png";
+        character.src = "images/character-kalle.png";
 
         let characterPosition = this.characterPositions[this.characterPosition]
         if(this.characterPosition == 'right') {
