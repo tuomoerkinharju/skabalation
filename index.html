@@ -1,28 +1,17 @@
 <!DOCTYPE html>
 <html lang="fi">
 <head>
-  <!-- ensin ulkoinen -->
-  <link rel="stylesheet" href="css/style.css">
-  <!-- vasta tämän jälkeen oma upotettu tyylisi -->
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0,
+                 maximum-scale=1.0, user-scalable=no">
+  <title>Skabalation</title>
+  <link rel="stylesheet" href="/css/style.css">
+
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-    }
-    #app, canvas {
-      display: block;
-      width: 100%;
-      height: calc(100% - 140px) !important;
-    }
-    .control {
-      position: absolute;
-      bottom: 20px !important;
-      left: 50% !important;
-      transform: translateX(-50%) !important;
-      z-index: 10;
-    }
+    html, body { height:100%; margin:0; padding:0; overflow:hidden }
+    #app, canvas { display:block; width:100%; height:calc(100% - 140px)!important }
+    .control { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); z-index:10 }
   </style>
 </head>
 <body>
@@ -38,7 +27,7 @@
 
   <button id="start-button" class="start-button">Aloita peli</button>
 
-  <!-- Juuritasolta js-kansioon -->
+  <!-- Absoluuttiset polut public-kansiosta -->
   <script src="/js/Helper.js"></script>
   <script src="/js/Person.js"></script>
   <script src="/js/Tree.js"></script>
