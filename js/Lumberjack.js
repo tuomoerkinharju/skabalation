@@ -1,17 +1,23 @@
+// Lumberjack.js
 class Lumberjack {
   constructor(props) {
     this.canvas    = props.el;
+    this.ctx       = this.canvas.getContext('2d');
     this.canvas.width  = Math.min(window.innerWidth, props.maxWidth);
     this.canvas.height = props.maxHeight;
-    this.ctx       = this.canvas.getContext('2d');
+
     this.background = '#d3f7ff';
 
-    this.tree      = null;
-    this.person    = null;
-    this.score     = 0;
+    // Preloadataan land-kuva
+    this.landImage = new Image();
+    this.landImage.src = 'images/land.png';
+
+    this.tree    = null;
+    this.person  = null;
+    this.score   = 0;
     this.highScore = parseInt(localStorage.getItem('highScore')) || 0;
-    this.btnLeft   = props.btnLeft;
-    this.btnRight  = props.btnRight;
+    this.btnLeft  = props.btnLeft;
+    this.btnRight = props.btnRight;
 
     this.isStarted       = false;
     this.isGameOver      = false;
@@ -21,24 +27,33 @@ class Lumberjack {
   }
 
   init() {
+    // Luodaan uusi puu-olio ja henkilö-olio
     this.person = new Person(this.canvas);
-    this.tree   = new Tree(this.canvas, this.canvas.width/2, this.canvas.height - 350);
+    this.tree   = new Tree(
+      this.canvas,
+      this.canvas.width / 2,
+      this.canvas.height - 350
+    );
     this.tree.init();
+
     this.score      = 0;
     this.isGameOver = false;
   }
 
   drawBackground() {
+    // Sky
     this.ctx.fillStyle = this.background;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    const land = new Image();
-    land.src = "images/land.png";
-    land.onload = () => {
-      this.ctx.drawImage(land, 0, this.canvas.height - 300, this.canvas.width, 350);
-    };
-    if (land.complete) {
-      this.ctx.drawImage(land, 0, this.canvas.height - 300, this.canvas.width, 350);
+    // Land (piirretään vasta kun kuvat ladattu)
+    if (this.landImage.complete) {
+      this.ctx.drawImage(
+        this.landImage,
+        0,
+        this.canvas.height - 300,
+        this.canvas.width,
+        350
+      );
     }
   }
 
@@ -99,15 +114,16 @@ class Lumberjack {
     if (!this.isStarted || this.isGameOver) return;
 
     this.person.characterPosition = direction;
+
+    // Leikkaus-ääni
     const audio = new Audio("audio/cut.wav");
     audio.playbackRate = 2;
     audio.play();
 
-    // Jos osu oikealle oksalle
-    if (
-      (this.tree.trees[0].value === 'left'  && direction === 'left') ||
-      (this.tree.trees[0].value === 'right' && direction === 'right')
-    ) {
+    // Tarkistus, osuuko oksaan
+    const next = this.tree.trees[0].value;
+    if ((next === 'left' && direction === 'left') ||
+        (next === 'right' && direction === 'right')) {
       setTimeout(() => {
         if (this.score > this.highScore) {
           localStorage.setItem('highScore', this.score);
@@ -120,12 +136,12 @@ class Lumberjack {
   }
 
   listener() {
-    // näppäimet
+    // Näppäimet
     window.addEventListener('keypress', e => {
       if (e.key === 'a' || e.key === 'ArrowLeft')  this.move('left');
       if (e.key === 'd' || e.key === 'ArrowRight') this.move('right');
     });
-    // napit
+    // Näppäin‑napit
     this.btnLeft.addEventListener('click',  () => this.move('left'));
     this.btnRight.addEventListener('click', () => this.move('right'));
   }
