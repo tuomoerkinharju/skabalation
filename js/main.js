@@ -29,3 +29,13 @@ function onStart(e) {
 ['click','touchend','pointerup'].forEach(evt =>
   startButton.addEventListener(evt, onStart)
 );
+
+function startGame(e) {
+  e.preventDefault();
+  startButton.classList.add('hidden');
+  game.start();
+  window.scrollTo(0, 0);    // varmistaa, että canvasin yläosa tulee näkyviin
+}
+['click','touchend','pointerup'].forEach(evt =>
+  startButton.addEventListener(evt, startGame)
+);
