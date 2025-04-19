@@ -15,3 +15,6 @@ const game = new Lumberjack({
 });
 game.init()
 game.render();
+document.addEventListener('dblclick', function (e) {
+  e.preventDefault();
+}, { passive: false });
