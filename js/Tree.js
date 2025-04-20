@@ -1,100 +1,216 @@
-// js/Tree.js
+// js/Lumberjack.js
+class Lumberjack {
+  constructor(props) {
+    this.canvas       = props.el;
+    this.ctx          = this.canvas.getContext('2d');
+    this.canvas.width  = Math.min(window.innerWidth, props.maxWidth);
+    this.canvas.height = props.maxHeight;
 
-class Tree {
-  constructor(canvas, startX, startY) {
-    this.canvas = canvas;
-    this.ctx    = canvas.getContext('2d');
+    this.background = '#d3f7ff';
+    this.landImage  = new Image();
+    this.landImage.src = 'images/land.png';
 
-    this.startX = startX;
-    this.startY = startY;
-    this.width  = 100;
-    this.height = 150;
+    this.person = new Person(this.canvas);
+    this.tree   = new Tree(
+      this.canvas,
+      this.canvas.width / 2,
+      this.canvas.height - 250
+    );
 
-    this.trees = [];
-    this.treesPossibility = [0, 'left', 'right'];
+    this.btnLeft  = props.btnLeft;
+    this.btnRight = props.btnRight;
+    this.listener();
 
-    // Kuvakoot (samanlaiset kuin aiemmin stemWidth, stemHeight)
-    this.branchWidth  = 100;
-    this.branchHeight = 30;
+    this.score     = 0;
+    this.highScore = parseInt(localStorage.getItem('highScore')) || 0;
 
-    // Aloitusrunkojen määrä
-    this.starterTree = 5;
+    this.baseInterval     = 2000;
+    this.minInterval      = 500;
+    this.decrementPerDrop = 50;
+    this.dropInterval     = this.baseInterval;
+    this.elapsed          = 0;
+    this.yOffset          = 0;
+    this.lastTime         = null;
+    this.dropCount        = 0;
 
-    // Lataa oksakuvat kerran konstruktorissa
-    this.branchLeftImg  = new Image();
-    this.branchLeftImg.src  = 'images/branch-left.png';
-
-    this.branchRightImg = new Image();
-    this.branchRightImg.src = 'images/branch-right.png';
+    this.isStarted  = false;
+    this.isGameOver = false;
   }
 
   init() {
-    this.trees = [];
-    for (let i = 0; i < this.starterTree; i++) {
-      // Random 0 (ei oksaa), left tai right
-      const value = this.treesPossibility[Math.floor(Math.random() * 3)];
-      // Vuorottelevat rungon värit
-      const color = i % 2 ? '#a17438' : '#cc8e35';
-      this.trees.push({ value, color });
-    }
+    this.tree.init();
+    this.score       = 0;
+    this.dropInterval = this.baseInterval;
+    this.elapsed      = 0;
+    this.yOffset      = 0;
+    this.lastTime     = null;
+    this.dropCount    = 0;
+    this.isGameOver   = false;
   }
 
-  createNewTrunk() {
-    // Vuorottelu viimeisen rungon värin perusteella
-    const lastColor = this.trees[this.trees.length - 1].color;
-    const color = lastColor === '#a17438' ? '#cc8e35' : '#a17438';
-    const value = this.treesPossibility[Math.floor(Math.random() * 3)];
-    this.trees.push({ value, color });
+  drawBackground() {
+    this.ctx.fillStyle = this.background;
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
-  draw() {
-    const x = this.canvas.width / 2 - this.width / 2;
-
-    this.trees.forEach((tree, i) => {
-      // Piirrä runko
-      this.ctx.fillStyle = tree.color;
-      this.ctx.fillRect(x, this.startY - i * this.height, this.width, this.height);
-
-      // Jos oksa vasemmalle
-      if (tree.value === 'left' && this.branchLeftImg.complete) {
+  drawTree() {
+    const x = this.canvas.width / 2 - this.tree.width / 2;
+    this.tree.trees.forEach((segment, idx) => {
+      const baseY = this.tree.startY - idx * this.tree.height;
+      const y = baseY + this.yOffset;
+      // Draw trunk
+      this.ctx.fillStyle = segment.color;
+      this.ctx.fillRect(x, y, this.tree.width, this.tree.height);
+      // Draw branch
+      if (segment.value === 'left' && this.tree.branchLeftImg.complete) {
         this.ctx.drawImage(
-          this.branchLeftImg,
-          x - this.branchWidth,
-          this.startY - i * this.height + this.height / 2,
-          this.branchWidth,
-          this.branchHeight
+          this.tree.branchLeftImg,
+          x - this.tree.width,
+          y + this.tree.height / 2 - 15,
+          this.tree.width,
+          30
         );
-      }
-      // Jos oksa oikealle
-      if (tree.value === 'right' && this.branchRightImg.complete) {
+      } else if (segment.value === 'right' && this.tree.branchRightImg.complete) {
         this.ctx.drawImage(
-          this.branchRightImg,
-          x + this.width,
-          this.startY - i * this.height + this.height / 2,
-          this.branchWidth,
-          this.branchHeight
+          this.tree.branchRightImg,
+          x + this.tree.width,
+          y + this.tree.height / 2 - 15,
+          this.tree.width,
+          30
         );
       }
     });
+  }
 
-    // Piirrä kivi pohjalle (sama kuin aiemmin)
-    this.ctx.fillStyle = '#808080';
-    this.ctx.roundRect(
-      x - 10,
-      this.startY + this.height - 10,
-      50, 30,
-      { upperLeft:10, upperRight:10, lowerLeft:10, lowerRight:10 },
-      true,
-      false
-    );
-    this.ctx.fillStyle = '#95a5a6';
-    this.ctx.roundRect(
-      x + 20,
-      this.startY + this.height - 10,
-      80, 30,
-      { upperLeft:10, upperRight:10, lowerLeft:10, lowerRight:10 },
-      true,
-      false
-    );
+  draw() {
+    // Sky
+    this.drawBackground();
+
+    // Tree
+    this.drawTree();
+
+    // Player
+    this.person.draw();
+
+    // Hide tree under land with solid fill
+    const landHeight = 250;
+    const landY = this.canvas.height - landHeight;
+    this.ctx.fillStyle = this.background;
+    this.ctx.fillRect(0, landY, this.canvas.width, landHeight);
+
+    // Land image on top
+    if (this.landImage.complete) {
+      this.ctx.drawImage(
+        this.landImage,
+        0,
+        landY,
+        this.canvas.width,
+        landHeight
+      );
+    }
+
+    // Scores
+    this.ctx.fillStyle = '#333';
+    this.ctx.font = '24px Arial';
+    this.ctx.fillText('Score', 30, 30);
+    this.ctx.font = '32px Arial';
+    this.ctx.fillText(this.score, 30, 70);
+    this.ctx.font = '24px Arial';
+    this.ctx.fillText('Highscore', 30, 120);
+    this.ctx.font = '32px Arial';
+    this.ctx.fillText(this.highScore, 30, 170);
+  }
+
+  update(timestamp) {
+    if (!this.isStarted || this.isGameOver) return;
+    if (this.lastTime === null) this.lastTime = timestamp;
+    const delta = timestamp - this.lastTime;
+    this.lastTime = timestamp;
+
+    // Update elapsed and offset
+    this.elapsed += delta;
+    this.yOffset = (this.elapsed / this.dropInterval) * this.tree.height;
+
+    // Early collision detection
+    const firstSeg = this.tree.trees[0];
+    if (firstSeg.value !== 0) {
+      const branchBaseY = this.tree.startY;
+      const branchY = branchBaseY + this.yOffset;
+      const branchCenter = branchY + this.tree.height / 2;
+      const playerPos = this.person.characterPositions[this.person.characterPosition];
+      const playerCenterY = playerPos.y + this.person.characterHeight / 2;
+      const landTopY = branchBaseY;
+      if (
+        branchCenter >= playerCenterY &&
+        branchCenter < landTopY &&
+        firstSeg.value === this.person.characterPosition
+      ) {
+        this.gameOver();
+        return;
+      }
+    }
+
+    // Perform drop when interval passed
+    if (this.elapsed >= this.dropInterval) {
+      this.elapsed -= this.dropInterval;
+      this.dropCount++;
+      this.yOffset = 0;
+
+      const next = this.tree.trees.shift();
+      this.tree.createNewTrunk();
+      this.score++;
+
+      // Safe drop collision
+      if (
+        (next.value === 'left' && this.person.characterPosition === 'left') ||
+        (next.value === 'right' && this.person.characterPosition === 'right')
+      ) {
+        this.gameOver();
+        return;
+      }
+
+      // Speed up
+      this.dropInterval = Math.max(
+        this.minInterval,
+        this.baseInterval - this.decrementPerDrop * this.dropCount
+      );
+    }
+
+    // Render next frame
+    this.draw();
+    requestAnimationFrame(ts => this.update(ts));
+  }
+
+  start() {
+    if (this.isStarted) return;
+    this.isStarted = true;
+    this.init();
+    requestAnimationFrame(ts => this.update(ts));
+  }
+
+  move(direction) {
+    if (!this.isStarted || this.isGameOver) return;
+    this.person.characterPosition = direction;
+    const audio = new Audio('audio/cut.wav');
+    audio.playbackRate = 2;
+    audio.play();
+  }
+
+  gameOver() {
+    this.isGameOver = true;
+    if (this.score > this.highScore) {
+      localStorage.setItem('highScore', this.score);
+      this.highScore = this.score;
+    }
+    alert(`You lose. Your Highscore: ${this.highScore}`);
+  }
+
+  listener() {
+    window.addEventListener('keypress', e => {
+      if (e.key === 'a' || e.key === 'ArrowLeft') this.move('left');
+      if (e.key === 'd' || e.key === 'ArrowRight') this.move('right');
+    });
+    this.btnLeft.addEventListener('click', () => this.move('left'));
+    this.btnRight.addEventListener('click', () => this.move('right'));
   }
 }
