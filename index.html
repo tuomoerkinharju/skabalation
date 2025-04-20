@@ -3,37 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport"
-        content="width=device-width, initial-scale=1.0,
-                 maximum-scale=1.0, user-scalable=no">
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Skabalation</title>
-
-  <!-- *** Sisäinen tyylilohko scrollin ja layoutin hallintaan *** -->
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-    }
-    #app, canvas {
-      display: block;
-      width: 100%;
-      height: calc(100% - 140px) !important;
-    }
-    .control {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      /* Lisätty taustaväri nappeja varten */
-      background-color: #d3f7ff;
-      width: 100%;
-      padding-bottom: 20px;
-      box-sizing: border-box;
-    }
-  </style>
-
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -46,9 +17,9 @@
       <button class="btn-control" id="move-right">OIKEA</button>
     </div>
   </div>
-
   <button id="start-button" class="start-button">Aloita peli</button>
 
+  <!-- Skriptit ladattava tässä täsmällisesti kerran, tässä järjestyksessä -->
   <script src="js/Helper.js"></script>
   <script src="js/Person.js"></script>
   <script src="js/Tree.js"></script>
