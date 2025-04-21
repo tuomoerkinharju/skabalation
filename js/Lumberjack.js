@@ -1,5 +1,4 @@
 // js/Lumberjack.js
-
 class Lumberjack {
   constructor(props) {
     this.canvas       = props.el;
@@ -7,23 +6,29 @@ class Lumberjack {
     this.canvas.width  = Math.min(window.innerWidth, props.maxWidth);
     this.canvas.height = props.maxHeight;
 
+    // Background and land image
     this.background = '#d3f7ff';
     this.landImage  = new Image();
     this.landImage.src = 'images/land.png';
 
+    // Game entities
     this.person = new Person(this.canvas);
-    this.tree   = new Tree(this.canvas,
-      this.canvas.width/2,
+    this.tree   = new Tree(
+      this.canvas,
+      this.canvas.width / 2,
       this.canvas.height - 250
     );
 
+    // Controls
     this.btnLeft  = props.btnLeft;
     this.btnRight = props.btnRight;
     this.listener();
 
+    // Score
     this.score     = 0;
     this.highScore = parseInt(localStorage.getItem('highScore')) || 0;
 
+    // Drop timing for smooth animation
     this.baseInterval     = 2000;
     this.minInterval      = 500;
     this.decrementPerDrop = 50;
@@ -32,8 +37,11 @@ class Lumberjack {
     this.yOffset          = 0;
     this.lastTime         = null;
     this.dropCount        = 0;
+
+    // Collision flag for current segment
     this.collisionChecked = false;
 
+    // Game state
     this.isStarted  = false;
     this.isGameOver = false;
   }
@@ -55,36 +63,70 @@ class Lumberjack {
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
-  drawTree() { this.tree.draw(); }
+  drawTree() {
+    const x = this.canvas.width / 2 - this.tree.width / 2;
+    this.tree.trees.forEach((seg, idx) => {
+      const baseY = this.tree.startY - idx * this.tree.height;
+      const y = baseY + this.yOffset;
+      // Draw trunk segment
+      this.ctx.fillStyle = seg.color;
+      this.ctx.fillRect(x, y, this.tree.width, this.tree.height);
+      // Draw branch images
+      if (seg.value === 'left' && this.tree.branchLeftImg.complete) {
+        this.ctx.drawImage(
+          this.tree.branchLeftImg,
+          x - this.tree.width,
+          y + this.tree.height / 2 - 15,
+          this.tree.width,
+          30
+        );
+      }
+      if (seg.value === 'right' && this.tree.branchRightImg.complete) {
+        this.ctx.drawImage(
+          this.tree.branchRightImg,
+          x + this.tree.width,
+          y + this.tree.height / 2 - 15,
+          this.tree.width,
+          30
+        );
+      }
+    });
+  }
 
   draw() {
-    // 1) Taivas
+    // Sky background
     this.drawBackground();
 
-    // 2) Rajaa puun yläosa ennen maata
-    const landTop = this.canvas.height - 250;
+    // Land parameters
+    const landHeight = 250;
+    const landY = this.canvas.height - landHeight;
+
+    // Clip tree drawing to above landY
     this.ctx.save();
     this.ctx.beginPath();
-    this.ctx.rect(0, 0, this.canvas.width, landTop);
+    this.ctx.rect(0, 0, this.canvas.width, landY);
     this.ctx.clip();
+
+    // Draw tree segments
     this.drawTree();
+
     this.ctx.restore();
 
-    // 3) Pelaaja
+    // Draw player
     this.person.draw();
 
-    // 4) Maa ja kivet peittää alapään
+    // Draw land covering lower part of tree
     if (this.landImage.complete) {
       this.ctx.drawImage(
         this.landImage,
         0,
-        landTop,
+        landY,
         this.canvas.width,
-        250
+        landHeight
       );
     }
 
-    // 5) Pisteet
+    // Draw score
     this.ctx.fillStyle = '#333';
     this.ctx.font = '24px Arial';
     this.ctx.fillText('Score', 30, 30);
@@ -102,34 +144,37 @@ class Lumberjack {
     const delta = timestamp - this.lastTime;
     this.lastTime = timestamp;
 
+    // Update elapsed and calculate yOffset
     this.elapsed += delta;
     this.yOffset = (this.elapsed / this.dropInterval) * this.tree.height;
 
-    // Early collision once when yli 50%
-    const first = this.tree.trees[0];
+    // Collision check at mid-drop only once
+    const seg = this.tree.trees[0];
     const ratio = this.elapsed / this.dropInterval;
-    if (!this.collisionChecked && first.value !== 0 && ratio >= 0.5 && ratio < 1) {
+    if (!this.collisionChecked && seg.value !== 0 && ratio >= 0.5 && ratio < 1) {
       this.collisionChecked = true;
-      const branchMidY  = this.tree.startY + this.yOffset + this.tree.height/2;
-      const p = this.person.characterPositions[this.person.characterPosition];
-      const playerMidY  = p.y + this.person.characterHeight/2;
-      if (first.value === this.person.characterPosition && branchMidY >= playerMidY) {
-        return this.gameOver();
+      const xCenter = this.canvas.width / 2;
+      const branchMidY = this.tree.startY + this.yOffset;
+      const playerPos = this.person.characterPositions[this.person.characterPosition];
+      const playerMidY = playerPos.y + this.person.characterHeight / 2;
+      if (seg.value === this.person.characterPosition && branchMidY >= playerMidY) {
+        this.gameOver();
+        return;
       }
     }
 
-    // Kun aika täyttyy, shiftataan ja nopeutetaan
+    // When drop interval reached, shift the segment
     if (this.elapsed >= this.dropInterval) {
       this.elapsed -= this.dropInterval;
       this.dropCount++;
       this.yOffset = 0;
       this.collisionChecked = false;
 
-      this.tree.trees.shift();
+      const removed = this.tree.trees.shift();
       this.tree.createNewTrunk();
       this.score++;
 
-      // Nopeuta
+      // Speed up next drop
       this.dropInterval = Math.max(
         this.minInterval,
         this.baseInterval - this.decrementPerDrop * this.dropCount
@@ -147,9 +192,9 @@ class Lumberjack {
     requestAnimationFrame(ts => this.update(ts));
   }
 
-  move(dir) {
+  move(direction) {
     if (!this.isStarted || this.isGameOver) return;
-    this.person.characterPosition = dir;
+    this.person.characterPosition = direction;
     const audio = new Audio('audio/cut.wav');
     audio.playbackRate = 2;
     audio.play();
@@ -166,10 +211,10 @@ class Lumberjack {
 
   listener() {
     window.addEventListener('keypress', e => {
-      if (e.key==='a'||e.key==='ArrowLeft')  this.move('left');
-      if (e.key==='d'||e.key==='ArrowRight') this.move('right');
+      if (e.key === 'a' || e.key === 'ArrowLeft') this.move('left');
+      if (e.key === 'd' || e.key === 'ArrowRight') this.move('right');
     });
-    this.btnLeft.addEventListener('click',  ()=>this.move('left'));
-    this.btnRight.addEventListener('click', ()=>this.move('right'));
+    this.btnLeft.addEventListener('click',  () => this.move('left'));
+    this.btnRight.addEventListener('click', () => this.move('right'));
   }
 }
